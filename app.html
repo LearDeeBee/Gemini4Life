@@ -1,50 +1,148 @@
-<script>
-function mesajGonder(e) {
-    // Sayfanın yenilenmesini engelle
-    if (e.preventDefault) e.preventDefault();
-    
-    var input = document.getElementById('user_input');
-    var chatDisplay = document.querySelector('.chat-display');
-    var soru = input.value;
-    
-    if (soru.trim() === "") return false;
-
-    // Kullanıcının mesajını ekrana yaz
-    chatDisplay.innerHTML += '<div style="color: #006400; margin-top: 10px;"><strong>You:</strong> ' + soru + '</div>';
-    
-    // Yükleniyor ibaresi ekle
-    var loadingId = "L" + Date.now();
-    chatDisplay.innerHTML += '<div class="ai-msg" id="' + loadingId + '"><strong>Gemini4Life:</strong> Thinking...</div>';
-    chatDisplay.scrollTop = chatDisplay.scrollHeight;
-
-    // KÖPRÜ BAĞLANTISI
-    // Aldığın linkin sonuna ?q= ekleyerek soruyu gönderiyoruz
-    var bridgeURL = "https://script.google.com/macros/s/AKfycbxiPCN-35opXZFy2_3xb9XXpotlCY635BLrlTYSvpPFXH4ET9cXD7U81CaAvJL-NP64/exec" + "?q=" + encodeURIComponent(soru);
-    
-    // Eski tarayıcılar (IE 8-11) için en güvenli bağlantı yöntemi
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            // Yükleniyor yazısını kaldır
-            var loader = document.getElementById(loadingId);
-            if (loader) loader.parentNode.removeChild(loader);
-            
-            if (this.status == 200) {
-                // Gemini'den gelen cevabı ekrana yapıştır
-                chatDisplay.innerHTML += '<div class="ai-msg"><strong>Gemini4Life:</strong> ' + this.responseText + '</div>';
-            } else {
-                chatDisplay.innerHTML += '<div class="ai-msg" style="color:red;"><strong>Error:</strong> Connection failed. Please check the bridge status.</div>';
-            }
-            // Otomatik aşağı kaydır
-            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+<html>
+<head>
+    <title>Gemini4Life - Terminal</title>
+    <style>
+        /* IE Dostu Tasarım - Beyaz Ekran Hatasını Önlemek İçin */
+        body {
+            background-color: #3b5998; 
+            color: #ffffff;
+            font-family: 'Tahoma', 'Verdana', sans-serif;
+            margin: 0;
+            padding: 20px;
         }
-    };
-    
-    xhttp.open("GET", bridgeURL, true);
-    xhttp.send();
+        .window {
+            background-color: #ffffff;
+            border: 2px solid #000080;
+            width: 95%;
+            max-width: 800px;
+            margin: 0 auto;
+            color: #333;
+        }
+        .title-bar {
+            background-color: #000080;
+            padding: 10px;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .content {
+            padding: 15px;
+            background-color: #f0f0f0;
+        }
+        .chat-display {
+            height: 300px;
+            border: 2px inset #ffffff;
+            background-color: #ffffff;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            text-align: left;
+        }
+        .ai-msg { 
+            color: #4B0082; 
+            margin-top: 10px; 
+            padding: 8px; 
+            border-left: 3px solid #9933FF;
+            background-color: #f4eaff;
+        }
+        .user-msg {
+            color: #006400;
+            margin-top: 5px;
+            padding: 5px;
+            font-weight: bold;
+        }
+        .input-area {
+            background-color: #d4d0c8;
+            padding: 10px;
+            border-top: 2px groove #ffffff;
+        }
+        #user_input {
+            width: 75%;
+            padding: 5px;
+        }
+        input[type="submit"] {
+            padding: 5px 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
 
-    // Giriş kutusunu temizle
-    input.value = "";
-    return false;
-}
-</script>
+    <div class="window">
+        <div class="title-bar">Gemini4Life Command Center v1.0</div>
+        
+        <div class="content">
+            <div class="chat-display" id="chat">
+                <strong style="color: blue;">[SYSTEM]:</strong> Connection ready. Low-resource mode is ON.<br>
+                <div class="ai-msg">
+                    <strong>Gemini4Life:</strong> Hello! I am ready to talk. Ask me anything!
+                </div>
+            </div>
+
+            <div class="input-area">
+                <form onsubmit="return mesajGonder(event)">
+                    <input type="text" id="user_input" placeholder="Type here...">
+                    <input type="submit" value="SEND">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <center>
+        <p style="font-size: 11px; color: #ffffff; margin-top: 15px;">
+            <a href="index.html" style="color: #fff;">&lt; Back to Welcome Screen</a>
+        </p>
+    </center>
+
+    <script>
+    function mesajGonder(e) {
+        // Sayfanın yenilenmesini durdur
+        if (e.preventDefault) e.preventDefault();
+        
+        var input = document.getElementById('user_input');
+        var chatDisplay = document.getElementById('chat');
+        var soru = input.value;
+        
+        if (soru.trim() === "") return false;
+
+        // 1. Kullanıcı mesajını ekrana ekle
+        chatDisplay.innerHTML += '<div class="user-msg">You: ' + soru + '</div>';
+        
+        // 2. Yükleniyor yazısı (ID ile takip ediyoruz ki sonra silebilelim)
+        var loadingId = "L" + Date.now();
+        chatDisplay.innerHTML += '<div class="ai-msg" id="' + loadingId + '"><strong>Gemini4Life:</strong> Thinking...</div>';
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+
+        // 3. KÖPRÜ BAĞLANTISI (Google Script Linkini Buraya Yaz)
+        var bridgeURL = "https://script.google.com/macros/s/AKfycbxiPCN-35opXZFy2_3xb9XXpotlCY635BLrlTYSvpPFXH4ET9cXD7U81CaAvJL-NP64/exec" + "?q=" + encodeURIComponent(soru);
+        
+        // 4. AJAX (XMLHttpRequest) - Eski tarayıcıların can simidi
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4) {
+                // "Thinking..." yazısını kaldır
+                var loader = document.getElementById(loadingId);
+                if (loader) loader.parentNode.removeChild(loader);
+                
+                if (this.status == 200) {
+                    // Gemini'den gelen gerçek cevabı yazdır
+                    chatDisplay.innerHTML += '<div class="ai-msg"><strong>Gemini4Life:</strong> ' + this.responseText + '</div>';
+                } else {
+                    chatDisplay.innerHTML += '<div class="ai-msg" style="color:red;"><strong>Error:</strong> Cannot reach the bridge!</div>';
+                }
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            }
+        };
+        
+        xhttp.open("GET", bridgeURL, true);
+        xhttp.send();
+
+        // Kutuyu temizle
+        input.value = "";
+        return false;
+    }
+    </script>
+
+</body>
+</html>
