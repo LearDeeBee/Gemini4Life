@@ -1,97 +1,50 @@
-<html>
-<head>
-    <title>Gemini4Life - Terminal</title>
-    <style>
-        /* Windows 7 Aero ve Nostalji Teması */
-        body {
-            background-color: #3b5998; /* Aero mavisi tonu */
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-        .window {
-            background-color: rgba(255, 255, 255, 0.8); /* Şeffaf cam efekti simülasyonu */
-            border: 1px solid #ffffff;
-            width: 90%;
-            max-width: 800px;
-            margin: 0 auto;
-            color: #333;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-        .title-bar {
-            background: linear-gradient(to bottom, #7abcff 0%, #4096ee 100%);
-            padding: 10px;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-            border-bottom: 1px solid #2d5a88;
-        }
-        .content {
-            padding: 20px;
-            background-color: #ffffff;
-        }
-        .chat-display {
-            height: 300px;
-            border: 1px inset #ccc;
-            background-color: #f9f9f9;
-            overflow-y: scroll;
-            padding: 10px;
-            margin-bottom: 15px;
-            font-size: 13px;
-        }
-        .system-msg { color: #000080; font-weight: bold; }
-        .ai-msg { color: #4B0082; margin-top: 10px; padding: 5px; border-left: 3px solid #9933FF; }
-        
-        .input-area {
-            background-color: #e1e1e1;
-            padding: 15px;
-            border-top: 1px solid #ccc;
-        }
-        input[type="text"] {
-            width: 75%;
-            padding: 8px;
-            border: 1px solid #7e7e7e;
-        }
-        input[type="submit"] {
-            padding: 8px 15px;
-            background: linear-gradient(to bottom, #ffffff 0%, #e1e1e1 100%);
-            border: 1px solid #7e7e7e;
-            cursor: pointer;
-        }
-        .footer-logo { float: right; margin-top: -5px; }
-    </style>
-</head>
-<body>
+<script>
+function mesajGonder(e) {
+    // Sayfanın yenilenmesini engelle
+    if (e.preventDefault) e.preventDefault();
+    
+    var input = document.getElementById('user_input');
+    var chatDisplay = document.querySelector('.chat-display');
+    var soru = input.value;
+    
+    if (soru.trim() === "") return false;
 
-    <div class="window">
-        <div class="title-bar">
-            Gemini4Life Command Center v1.0
-        </div>
-        
-        <div class="content">
-            <div class="chat-display">
-                <span class="system-msg">[SYSTEM]: Connection established. Low-resource mode enabled.</span><br>
-                <div class="ai-msg">
-                    <strong>Gemini4Life:</strong> Hello! Your legacy hardware is now connected. How can I help you today?
-                </div>
-                </div>
+    // Kullanıcının mesajını ekrana yaz
+    chatDisplay.innerHTML += '<div style="color: #006400; margin-top: 10px;"><strong>You:</strong> ' + soru + '</div>';
+    
+    // Yükleniyor ibaresi ekle
+    var loadingId = "L" + Date.now();
+    chatDisplay.innerHTML += '<div class="ai-msg" id="' + loadingId + '"><strong>Gemini4Life:</strong> Thinking...</div>';
+    chatDisplay.scrollTop = chatDisplay.scrollHeight;
 
-            <div class="input-area">
-                <form action="#" method="get">
-                    <input type="text" name="q" placeholder="Type your message here...">
-                    <input type="submit" value="SEND">
-                    <img src="logo.png" width="35" class="footer-logo" alt="G4L">
-                </form>
-            </div>
-        </div>
-    </div>
+    // KÖPRÜ BAĞLANTISI
+    // Aldığın linkin sonuna ?q= ekleyerek soruyu gönderiyoruz
+    var bridgeURL = "https://script.google.com/macros/s/AKfycbxiPCN-35opXZFy2_3xb9XXpotlCY635BLrlTYSvpPFXH4ET9cXD7U81CaAvJL-NP64/exec" + "?q=" + encodeURIComponent(soru);
+    
+    // Eski tarayıcılar (IE 8-11) için en güvenli bağlantı yöntemi
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4) {
+            // Yükleniyor yazısını kaldır
+            var loader = document.getElementById(loadingId);
+            if (loader) loader.parentNode.removeChild(loader);
+            
+            if (this.status == 200) {
+                // Gemini'den gelen cevabı ekrana yapıştır
+                chatDisplay.innerHTML += '<div class="ai-msg"><strong>Gemini4Life:</strong> ' + this.responseText + '</div>';
+            } else {
+                chatDisplay.innerHTML += '<div class="ai-msg" style="color:red;"><strong>Error:</strong> Connection failed. Please check the bridge status.</div>';
+            }
+            // Otomatik aşağı kaydır
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        }
+    };
+    
+    xhttp.open("GET", bridgeURL, true);
+    xhttp.send();
 
-    <center>
-        <p style="font-size: 11px; color: #e0e0e0; margin-top: 15px;">
-            <a href="index.html" style="color: #fff;">&lt; Back to Welcome Screen</a>
-        </p>
-    </center>
-
-</body>
-</html>
+    // Giriş kutusunu temizle
+    input.value = "";
+    return false;
+}
+</script>
